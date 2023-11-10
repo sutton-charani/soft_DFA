@@ -9,7 +9,7 @@ According to wikipedia (and the scientific litterature), the interpretation of t
 - $\alpha > 1$: non-stationary, unbounded
 - $\alpha \approx 3/2$: Brownian noise
 
-The first objective of this work is to extend this crisp interpretation partition into a fuzzy partitioning (e.g. a single alpha value could correspond to different type of noise).To do so, tests are carried out based on the simulation of different type of noise (eventually start from a simple sinusoid signal) and on the computation of alpha coefficient associated with a standard DFA. The known classification of the signal should help to define an empirical (i.e. based on simulations) uncertainty model of the fuzzy partition.
+The first objective of this work is to extend this crisp interpretation partition into a fuzzy partitioning (e.g. a single alpha value could correspond to different types of noise). To do so, tests are carried out based on the simulation of different type of noise (eventually start from a simple sinusoid signal) and on the computation of alpha coefficient associated with a standard DFA. The known classification of the signal should help to define an empirical (i.e. based on simulations) uncertainty model of the fuzzy partition.
 
 The second objective of this work is to make a sensibility analysis on the DFA in order to asses the impact of different parameters (number of points, duration, segments definition, type/order of regression model, etc.). To do so, the standard DFA is being recoded and experiments will be planned to measure the impact of each parameters (multiple effects will be considered as well). 
 
