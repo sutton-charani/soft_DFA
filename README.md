@@ -1,4 +1,4 @@
-# uncertain_DFA
+# Uncertain DFA
 Detrended Fluctuation Analysis (DFA) in the perspective of uncertainties regarding among others the interpretation of the alpha coefficient.
 
 According to wikipedia (and the scientific litterature), the interpretation of the alpha coefficient (output of the DFA applied to any signal):
