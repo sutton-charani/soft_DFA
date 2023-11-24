@@ -31,3 +31,12 @@ Thinking:
 - Nicolas: if models mixture is used (2 models -> 2 slopes -> 2 fdc/probas to be fused? -> use of the E2M algorithm? what type of combination?
 Reading:
 - both: bibliography on DFA, uncertain/imprecise regression
+
+UPDATE (24/11/2023)
+
+Research trails:
+- imprecision modelling (fuzzy-possibility-belief) in case of low quality final DFA regression -> imprecise alpha
+- Detrended Distributionnal Analysis (DDA): instead of focusing on fluctuations (ie error between the signal and its linear trend), focus on the distribution based on histogram. The underlying assumption = some (natural) pattern might be at different times of the signal and at different scales.
+
+Open questions:
+- why a gaussian noise could have memory?
