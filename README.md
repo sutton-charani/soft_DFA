@@ -17,16 +17,16 @@ The third/main objective of this work is to identify all the uncertainties of th
 
 The targeted journal is "Applied Soft Computing".
 
- Questions:
+ ### Questions:
  - the first experiment on a sinusoid noised signal show some model mixture in the regression plot (simple sinusoid -> 2 linear models could be mixed) -> could the number of models be extracted from the spectral analysis of the plot (simple sinusoid -> 2 frequential peaks -> 2 linear models?)?
  - what is the real meaning of the alpha-DFA? is it a real complexity level?
  - what is the best complexity indicators among entropy and DFA based known methods?
 
-TO DO LIST:
-Implementation:
+### TO DO LIST:
+#### Implementation:
 - Francis: simulation of many noise signal -> computation of the corresponding alpha coefficients (for fuzzyfying the interpretation partitioning the alpha values)
 - Nicolas: manually code the whole DFA process -> parametrisation for sensitivity analysis
-Thinking:
+#### Thinking:
 - Francis: try to establish a fuzzy interpretation partitioning the alpha values (from simulations)
 - Nicolas: if models mixture is used (2 models -> 2 slopes -> 2 fdc/probas to be fused? -> use of the E2M algorithm? what type of combination?
 Reading:
@@ -44,4 +44,4 @@ Reading:
 - what is the type(s) of signal the DFA can handle (not only in terms of size)?
 
 ### TODOLIST
-- sensitivuty analysis of initial window choice (or on initial pattern length?
+- sensitivity analysis of initial window choice (or on initial pattern length?
