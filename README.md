@@ -32,11 +32,16 @@ Thinking:
 Reading:
 - both: bibliography on DFA, uncertain/imprecise regression
 
-UPDATE (24/11/2023)
+**UPDATE** (24/11/2023)
 
-Research trails:
+**Research trails:**
+- extend the geometrical growth of fluctuations depending on a complexity level (F=n^{alpha}) to other growing models
 - imprecision modelling (fuzzy-possibility-belief) in case of low quality final DFA regression -> imprecise alpha
 - Detrended Distributionnal Analysis (DDA): instead of focusing on fluctuations (ie error between the signal and its linear trend), focus on the distribution based on histogram. The underlying assumption = some (natural) pattern might be at different times of the signal and at different scales.
 
-Open questions:
+**Open questions:**
 - why a gaussian noise could have memory?
+- what is the type(s) of signal the DFA can handle (not only in terms of size)?
+
+**TODOLIST:**
+- sensitivuty analysis of initial window choice (or on initial pattern length?
