@@ -1,5 +1,5 @@
 # Functions library for Detrended Distributional Analysis (DDA)
-library(nonlinearTseries); library(ggplot2); library(jpeg); library(ggpubr)
+library(nonlinearTseries); library(ggplot2); library(jpeg); library(ggpubr); library(ggdark)
 
 url <- "https://raw.githubusercontent.com/sutton-charani/uncertain_DFA/main/code/www/tabeau.jpg"
 download.file(url, destfile = "tableau.jpg")
