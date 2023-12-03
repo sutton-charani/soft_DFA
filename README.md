@@ -1,6 +1,6 @@
 # Soft DFA
 
-<a href="https://www.mozilla.com](https://www.overleaf.com/project/6560a7b71a2908eaada8eb67"> Overleaf paper </a>
+<a href="https://www.overleaf.com/project/6560a7b71a2908eaada8eb67"> Overleaf paper </a>
 
 ## DFA review: 
 - imprecision in sinusoid, gaussian noise or real application (ladybug)
