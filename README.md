@@ -2,6 +2,8 @@
 
 https://www.overleaf.com/project/6560a7b71a2908eaada8eb67
 
+<a href="[https://www.mozilla.com](https://www.overleaf.com/project/6560a7b71a2908eaada8eb67)"> Overleaf paper </a>
+
 Detrended Fluctuation Analysis (DFA) in the perspective of uncertainties regarding among others the interpretation of the alpha coefficient.
 
 According to wikipedia (and the scientific litterature), the interpretation of the alpha coefficient (output of the DFA applied to any signal):
