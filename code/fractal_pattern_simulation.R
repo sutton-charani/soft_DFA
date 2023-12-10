@@ -2,103 +2,76 @@
 # Variables and screen cleaning
 graphics.off(); cat("\014"); rm(list=ls()) ;options(warn=-1)
 
-library(nonlinearTseries); library(ggplot2); library(ggpubr)
-library(ggdark); library(ggthemes)
 
-set.seed(123)
-pattern_values <- c(8, 7)
-pattern <- c(0, pattern_values, 0)
-n <- length(pattern)
-n_values <- length(pattern_values)
+source("/Users/nsc/Google Drive/Recherche/Projets/Escarres/code/my_lib_dda.R")
+#devtools::source_url("https://raw.githubusercontent.com/sutton-charani/uncertain_DFA/main/code/my_lib_dda.R")
 
-p_pattern <- ggplot(data.frame(x=1:length(pattern), 
-                               y=pattern), aes(x,y)) + 
-  geom_line() +
-  xlab("") + ylab("") +
-  ggtitle("initial pattern") +
-  dark_theme_light() +
-  theme(axis.ticks.x = element_blank(), axis.ticks.y = element_blank(),
-        axis.text.y=element_blank())
-p_pattern
+pattern <- sample(1:10, size=7)# c(2, 8, 7, 1)
 
-fractal_factor <- 0.2
-n_convol <- 8
+p_pattern <- tab_plot(1:length(pattern), pattern, title="Input pattern")
 
-final_sig <- pattern
-alphas <- c()
-plots <- list()
-plots[[1]] <- p_pattern
-i_convol=1
-for (i_convol in 1:n_convol){
-  interpolated_signal <- #final_sig +#* 1/fractal_factor + 
-    approx(x=1:length(final_sig), 
-           y=final_sig, 
-           n=length(final_sig) + (length(final_sig)-1)*(n-2))$y#fractal_factor*length(final_sig)
-  convoluted_signal <- interpolated_signal
-  ibreak=1
-  for (ibreak in 1:eval(length(final_sig)-1)){
-    segt <- convoluted_signal[seq(from=(ibreak-1)*(length(pattern)-1)+1, 
-                                  to=(ibreak-1)*(length(pattern)-1)+4)] 
-    segt <- segt + pattern * fractal_factor
-    convoluted_signal[seq(from=(ibreak-1)*(length(pattern)-1)+1, 
-                          to=(ibreak-1)*(length(pattern)-1)+4)] <- segt 
-  }
-  #new_sig <- new_sig * (max(pattern)/max(new_sig))
-  final_sig <- convoluted_signal
-  alpha <- as.numeric(estimate(dfa(final_sig, do.plot=F)))
-  cat(alpha, " ")
-  plots[[i_convol+1]] <- ggplot(data.frame(x=1:length(final_sig), y=final_sig), aes(x,y)) +
-    geom_line() +
-    xlab("") + ylab("") +
-    ggtitle(paste(i_convol, "convolutions -> alpha =", round(alpha, 3)))+
-    dark_theme_light() +
-    theme(axis.ticks.x = element_blank(), axis.ticks.y = element_blank(),
-          axis.text.y=element_blank())
-  alphas <- c(alphas, alpha)
-  print(ggplot(data.frame(x=1:length(alphas), 
-                    y=alphas), aes(x,y)) + 
-    geom_line() +
-    xlab("nb convolutions") + ylab("alpha") +
-    ggtitle(paste("Complexity evolution for", i_convol, "nested convolutions")) +
-      dark_theme_light())
+n_convol <- 1
+conv_sig <- sim_fractal_signal(sig=pattern, pattern=pattern, n_convol)
+dfa_alpha <- as.numeric(estimate(dfa(conv_sig, do.plot=F)))
+mdfa_alpha <- mean(MFDFA(conv_sig, scale=10:100, q=-10:10)$spec$hq)
+dda_alpha <- dda_complexity(conv_sig, length(pattern))
+p_conv_sig <- tab_plot(1:length(conv_sig), conv_sig, 
+                       title=paste0(n_convol, "-Convoluated signal \n-> (DFA-MDFA-DDA) alpha = (", 
+                                    round(dfa_alpha, 2), ", ", 
+                                    #round(mdfa_alpha, 2), ", ", 
+                                    round(dda_alpha), ")"),
+                       txt_size=15)
+ggarrange(p_pattern, p_conv_sig)
+
+n_convol <- 5
+scale <- 10:100
+q <- -10:10
+sig <- pattern
+
+vars <- c()
+entropies <- c()
+dfa_complexities <- c()
+mdfa_complexities <- c()
+dda_complexities <- c()
+for (i_convol in 1 : n_convol){
+  cat(i_convol, " ")
+  
+  sig <- sim_fractal_signal(sig, pattern, 1)
+  
+  vars <- c(vars, var(sig))
+  entropies <- c(entropies, entropy(sig))
+  dfa_alpha <- as.numeric(estimate(dfa(sig, do.plot=F)))
+  # if (length(sig) < 200){
+  #   mdfa_alpha <- NA
+  # } else {
+  #   mdfa_alpha <- mean(MFDFA(sig, scale=scale, q=q)$spec$hq)
+  # }
+  dda_alpha <- dda_complexity(sig, length(pattern))
+  dfa_complexities <- c(dfa_complexities, dfa_alpha)
+  #mdfa_complexities <- c(mdfa_complexities, mdfa_alpha)
+  dda_complexities <- c(dda_complexities, dda_alpha)
 }
+p_conv_sig <- tab_plot(1:length(sig), sig, 
+                       title=paste0(n_convol, "-Convoluated signal \n-> (DFA-MDFA-DDA) alpha = (", 
+                                    round(dfa_alpha, 2), ", ", 
+                                    #round(mdfa_alpha, 2), ", ", 
+                                    round(dda_alpha), 
+                                    ")"),
+                       txt_size=10)
+p_var_complexity <- tab_plot(1:length(vars), vars, title="Variance evolution", txt_size=10)
+p_entropy_complexity <- tab_plot(1:length(entropies), entropies, title="Entropy evolution", txt_size=10)
+p_dfa_complexity <- tab_plot(1:length(dfa_complexities), dfa_complexities, title="DFA complexity evolution", txt_size=10)
+#p_mdfa_complexity <- tab_plot(1:length(mdfa_complexities), mdfa_complexities, title="MDFA complexity evolution", txt_size=10)
+p_dda_complexity <- tab_plot(1:length(dda_complexities), dda_complexities, title="DDA complexity evolution", txt_size=10)
+ggarrange(p_pattern, p_conv_sig, p_var_complexity, 
+          p_entropy_complexity, p_dfa_complexity, 
+          #p_mdfa_complexity, 
+          p_dda_complexity, 
+          nrow=2, ncol=3)
 
-p_evol_alpha <- ggplot(data.frame(x=1:length(alphas), 
-                                  y=alphas), aes(x,y)) + 
-  geom_line() +
-  xlab("nb convolutions") + ylab("alpha") +
-  ggtitle(paste("Complexity evolution for", i_convol, "nested convolutions")) +
-  dark_theme_light()
 
-ggarrange(p_initial_sig, p_initial, plots[[2]], 
-          plots[[3]], plots[[4]], plots[[5]], 
-          plots[[6]], plots[[7]], p_evol_alpha, 
-          nrow=3, ncol=3)
 
-ggarrange(p_initial, plots[[2]], plots[[3]], plots[[4]], plots[[5]], 
-          plots[[6]], plots[[7]], plots[[8]], plots[[9]], plots[[10]], 
-          plots[[11]], plots[[12]], plots[[13]], plots[[14]], p_evol_alpha,
-          nrow=3, ncol=5, main=paste("nbreaks =", nbreaks, 
-                                     ", fractal_factor=", fractal_factor))
 
-ggarrange(plots[[1]], plots[[2]], 
-          plots[[3]], plots[[4]],
-          nrow=2, ncol=2)
-
-ggarrange(plots[[2]], plots[[3]], plots[[4]],
-          plots[[5]], plots[[6]], plots[[7]],
-          plots[[8]], plots[[9]], plots[[10]],
-          nrow=3, ncol=3)
-
-ggarrange(plots[[1]], plots[[2]], plots[[3]], 
-          plots[[4]], plots[[5]], plots[[6]], 
-          plots[[7]], plots[[8]], p_evol_alpha, 
-          nrow=3, ncol=3)
-
-ggarrange(plots[[1]], plots[[2]], plots[[3]], plots[[4]], 
-          plots[[5]], plots[[6]], plots[[7]], plots[[8]], 
-          plots[[9]], plots[[10]], plots[[11]], NULL,
-          nrow=3, ncol=4)
 
 
 
