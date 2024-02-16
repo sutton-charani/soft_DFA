@@ -135,7 +135,7 @@ soft_dfa <- function(x, window_growing_factor=2, n_wind=10, doplot=F){
   #log_reg_model <- lm(fluc ~ term, log(fluctuations))
   #alpha <- log_reg_model$coefficients[['term']]
   log_df <- log(fluctuations)
-  alpha_possib <- possibilistic_linear_regression(log_df$term, log_df$fluc)$slope_possibility
+  alpha_possib <- possibilistic_linear_regression(x=log_df$term, y=log_df$fluc)$slope_possibility
   
   if (doplot){
     tab_plot(x=log(fluctuations$term), y=log(fluctuations$fluc), type="points", 
