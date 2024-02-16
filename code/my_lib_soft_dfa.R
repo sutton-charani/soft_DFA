@@ -2,7 +2,7 @@
 devtools::source_url(paste0("https://raw.githubusercontent.com/sutton-charani/",
                             "possibilistic_linear_regression/",
                             "main/code/my_lib_possibilistic_linear_regression.R"),
-                     sha1="701008dc6020d940d1fd11adce67f10d091378c3")
+                     sha1="da5ae5bb22fae50aa2f83c691e594117701dbd94")
 
 dfa_complexity <- function(x, window_growing_factor=2, n_wind=10, doplot=F){
   
