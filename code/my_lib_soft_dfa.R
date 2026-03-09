@@ -291,23 +291,28 @@ compute_fluctuations <- function(x, n_wind=10, n_sizes=20, min_win_size=10, max_
       iwindow=1
       if (windowing == "uniform"){
         starts <- round(seq(1, n - window_size, length.out=n_wind))
-      }  else if (windowing == "complete"){
+      } else if (windowing == "complete"){
         starts <- seq(1, n - window_size + 1)
         n_wind <- length(starts)
+      } else if(windowing == "random"){
+        starts <- sample(n - window_size + 1, n_wind)
       }
+      stops <- starts + window_size - 1
       iwindow=1
       for (iwindow in 1 : n_wind){
-        if (windowing == "random"){
-          start <- sample(n - window_size + 1, 1)
-        } else { # (windowing == "uniform"){
-          start <- starts[iwindow]
-        }
-        stop <- start + window_size - 1
+        # if (windowing == "random"){
+        #   start <- sample(n - window_size + 1, 1)
+        # } else { # (windowing == "uniform"){
+        #   start <- starts[iwindow]
+        # }
+        start <- starts[iwindow]
+        stop <- stops[iwindow]
+        # stop <- start + window_size - 1
         window <- X[start:stop]
         fluc <- compute_window_fluctuations(window)
         fluctuations_1window_size  <- c(fluctuations_1window_size, fluc)
       }
-      fluctuations <- rbind(fluctuations, data.frame(window_size=rep(window_size, n_wind), fluc=fluctuations_1window_size))
+      fluctuations <- rbind(fluctuations, data.frame(window_size=rep(window_size, n_wind), fluc=fluctuations_1window_size, start=starts, stop=stops))
     }
   } else { # image
     
@@ -367,11 +372,10 @@ compute_fluctuations <- function(x, n_wind=10, n_sizes=20, min_win_size=10, max_
       }
       if (length(fluctuations_1win_dim) > 0){
         fluctuations <- rbind(fluctuations,
-                              data.frame(win_side=win_side, fluc=fluctuations_1win_dim))
+                              data.frame(win_side=win_side, fluc=fluctuations_1win_dim, window_index=win_sides))
       }
     }
   }
-  
   return(fluctuations)
 }
 ################################
@@ -400,12 +404,16 @@ soft_dfa <- function(x, n_wind=10, n_sizes=20, min_win_size=10, max_win_size=300
 }
 ################################
 fluctions_cloud <- function(ts, min_win_size=10, max_win_size=length(ts)-2, n_sizes=1000, n_wind=100,
-                            transparency=0.2, points_size=0.1, slope=F, loc_slopes=F, do.plot=F){
+                            transparency=0.2, points_size=0.1, slope=F, loc_slopes=F, log=T, do.plot=F){
   # min_win_size=10; max_win_size=length(ts)-2; n_sizes=1000; n_wind=100; transparency=0.2; points_size=0.1; slope=F; loc_slopes=F; do.plot=F
   fluctuations <- compute_fluctuations(ts, n_sizes=n_sizes, n_wind=n_wind, 
                                        min_win_size=min_win_size, max_win_size=max_win_size)
-
-  log_fluc <- log10(fluctuations)
+  if (log){
+    log_fluc <- log10(fluctuations)
+  } else {
+    log_fluc <- fluctuations
+  }
+  
   names(log_fluc) <- c('log_n', 'log_fluc')
   
   lin_mod <- lm(log_fluc ~ log_n, data=log_fluc)  
@@ -432,140 +440,29 @@ fluctions_cloud <- function(ts, min_win_size=10, max_win_size=length(ts)-2, n_si
   return(list(log_fluc=log_fluc, p=p))
 }
 ################################
-compute_cloud_fluctuations <- function(x, min_win_size=10, fluc_type="dfa"){
+plot_cloud_fluctuations <- function(fluctuations, transparency=0.1, points_size=230*exp(-max(fluctuations$window_size)*0.051), fluc_type="dfa", log=F, title=NULL){
   
-  N <- length(x)
-  
-  # Detrending
-  X <- cumsum(x - mean(x))
-  
-  max_win_size <- N
-  
-  # Windowing
-  window_sizes <- seq(min_win_size, max_win_size)
-  #log_window_sizes <- log(window_sizes)
-  # terms <- exp(log_window_sizes)
-  terms <- window_sizes
-  
-  fluctuations <- c()
-  term=terms[1]
-  for (term in terms){
-    fluctuations_1term <- c()
-    n_wind <- N - term/2
-    start=1
-    for (start in seq(1, N - term + 1)){
-      stop <- start + term - 1
-      window <- X[start:stop]
-      fluc <- compute_window_fluctuations(window, fluc_type)
-      fluctuations_1term <- c(fluctuations_1term, fluc)
-    }
-    fluctuations <- rbind(fluctuations, 
-                          data.frame(term=rep(term, length(fluctuations_1term)), fluc=fluctuations_1term))
+  if (log){
+    fluctuations <- log10(fluctuations)
+    names(fluctuations)[1:2] <- c('log_n', 'log_fluc')
+    n <- max(fluctuations$log_n)
+    p <- ggplot(fluctuations, aes(x=log_n, y=log_fluc))
+  } else{
+    n <- max(fluctuations$window_size)
+    p <- ggplot(fluctuations, aes(x=window_size, y=fluc))
   }
-  return(fluctuations)
-}
-################################
-plot_cloud_fluctuations <- function(log_fluc, transparency=NULL, points_size=NULL){
-  
-  n <- nrow(log_fluc)
-  if (is.null(points_size)){
-    if (n < 30){
-      points_size <- 20
-    } else if(n < 100){
-      points_size <- 8.5
-    } else if(n < 200){
-      points_size <- 3
-    } else{
-      points_size <- 0.05
-    }
-  }
-  
-  if (is.null(points_size)){
-    if (n < 30){
-      transparency <- 0.2
-    } else {
-      transparency <- 0.1
-    } 
-  }
-  
-  p <- ggplot(log_fluc, aes(x=log_n, y=log_fluc)) + 
+
+  p <- p + 
     geom_point(size=points_size, alpha=transparency, color="white") + 
-    theme_void() +
-    theme(plot.background=element_rect(fill="#04304B"),
-          plot.title=element_text(size=40, colour="white", hjust=0.5),
-          plot.margin=unit(c(-1, -1, -1, -1), "cm"))
+    theme_void() + ggtitle(title) +
+    theme(
+      plot.background=element_rect(fill="#04304B"),
+          #plot.title=element_text(size=40, colour="white", hjust=0.5),
+          plot.margin=unit(c(-1, -1, -1, -1), "cm")#, 
+          #axis.title=element_text(size=20, colour='white'),
+          #axis.text=element_text(colour='white')
+      )
   return(p)
-}
-################################
-compute_fluctuations_im <- function(im, n_sizes=30, n_wind_per_size=100, verbose=F,
-                                    x_limit_sizes=c(10, ncol(im)/2), y_limit_sizes=c(10, nrow(im)/2)){ 
-  
-  if (length(dim(im)) > 2){
-    im <- rgb_2gray(im)
-  }
-  
-  x_dim <- ncol(im)
-  y_dim <- nrow(im)
-  melted_im <- reshape2::melt(im)
-  N <- nrow(melted_im)
-  
-  # Detrending
-  melted_im$value <- melted_im$value - mean(melted_im$value)
-  
-  # Adatation of windows limit sizes to the image dimension
-  x_limit_sizes[2] <- min(x_limit_sizes[2], round(x_dim/2))
-  y_limit_sizes[2] <- min(y_limit_sizes[2], round(y_dim/2))
-  
-  # Windowing
-  if (is.integer(sqrt(n_sizes))){
-    x_win_sizes <- round(seq(from=x_limit_sizes[1], to=x_limit_sizes[2], length.out=sqrt(n_sizes)))
-    y_win_sizes <- round(seq(from=y_limit_sizes[1], to=y_limit_sizes[2], length.out=sqrt(n_sizes)))
-  } else {
-    x_win_sizes <- round(seq(from=x_limit_sizes[1], to=x_limit_sizes[2], length.out=ceiling(sqrt(n_sizes))))
-    y_win_sizes <- round(seq(from=y_limit_sizes[1], to=y_limit_sizes[2], length.out=round(sqrt(n_sizes))))
-  }
-  
-  fluctuations <- c()
-  x_win_size=x_win_sizes[1]; y_win_size=y_win_sizes[1]
-  if (verbose) paste(length(x_win_sizes) * length(y_win_sizes), "window sizes to process")
-  for (x_win_size in x_win_sizes){
-    if (verbose) cat('\n')
-    for (y_win_size in y_win_sizes){
-      if (verbose) cat(paste0(", (", x_win_size, ', ', y_win_size, ')'))
-      
-      # Windows centers computation
-      if (is.integer(sqrt(n_wind_per_size))){
-        x_centers <- round(seq(from=x_win_size/2, to=x_dim-x_win_size/2-1, length.out=sqrt(n_wind_per_size)))
-        y_centers <- round(seq(from=y_win_size/2, to=y_dim-y_win_size/2-1, length.out=sqrt(n_wind_per_size)))
-      } else {
-        x_centers <- round(seq(from=x_win_size/2, to=x_dim-x_win_size/2-1, length.out=floor(sqrt(n_wind_per_size))))
-        y_centers <- round(seq(from=y_win_size/2, to=y_dim-y_win_size/2-1, length.out=floor(sqrt(n_wind_per_size))))
-      }
-      
-      fluctuations_1win_dim <- c()
-      x_center=x_centers[1]; y_center=y_centers[1]#x_center=tail(x_centers, 1); y_center=tail(y_centers, 1)
-      for (x_center in x_centers){
-        for (y_center in y_centers){
-          window <- im[seq(from=round(y_center - y_win_size/2) + 1, to=round(y_center + y_win_size/2)),
-                       seq(from=round(x_center - x_win_size/2) + 1, to=round(x_center + x_win_size/2))]
-          if (sd(window) > 0){
-            melted_win <- reshape2::melt(window)
-            n <- nrow(melted_win)
-            reg_model <- lm(value ~ ., melted_win)
-            melted_predicted_win <- predict(reg_model, melted_win)
-            predicted_win <- matrix(melted_predicted_win, nrow=nrow(window), ncol=ncol(window), byrow=T)
-            fluctuations_1win_dim <- c(fluctuations_1win_dim, sqrt(mean((window - predicted_win)^2)))
-          }
-        }
-      }
-      if (length(fluctuations_1win_dim) > 0){
-        fluctuations <- rbind(fluctuations,
-                              data.frame(fluc=fluctuations_1win_dim, x_size=x_win_size, y_size=y_win_size))
-      }
-    }
-  }
-  
-  return(fluctuations)
 }
 ################################
 spatial_dfa <- function(im, n_sizes=20, n_wind_per_size=30, verbose=F,
@@ -590,5 +487,5 @@ spatial_dfa <- function(im, n_sizes=20, n_wind_per_size=30, verbose=F,
   alpha <- lin_mod$coefficients['win_size']
   return(list(alpha=alpha, av_flucs=av_flucs))
 }
-
+################################
 
