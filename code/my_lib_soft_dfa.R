@@ -462,7 +462,9 @@ fluctions_cloud <- function(ts, min_win_size=10, max_win_size=length(ts)-2, n_si
   return(list(log_fluc=log_fluc, p=p))
 }
 ################################
-plot_cloud_fluctuations <- function(fluctuations, transparency=0.1, points_size=230*exp(-max(fluctuations$window_size)*0.051), fluc_type="dfa", log=F, title=NULL){
+plot_cloud_fluctuations <- function(fluctuations, transparency=0.1, points_size=184/length(unique(fluctuations$window_size)), 
+                                    fluc_type="dfa", log=F, title=NULL, #pt_size=230*exp(-max(fluctuations$window_size)*0.051)
+                                    points_color="white", bg_color="#04304B"){
   
   if (log){
     fluctuations <- log10(fluctuations)
@@ -475,10 +477,10 @@ plot_cloud_fluctuations <- function(fluctuations, transparency=0.1, points_size=
   }
 
   p <- p + 
-    geom_point(size=points_size, alpha=transparency, color="white") + 
+    geom_point(size=points_size, alpha=transparency, color=points_color) + 
     theme_void() + ggtitle(title) +
     theme(
-      plot.background=element_rect(fill="#04304B"),
+      plot.background=element_rect(fill=bg_color),
           #plot.title=element_text(size=40, colour="white", hjust=0.5),
           plot.margin=unit(c(-1, -1, -1, -1), "cm")#, 
           #axis.title=element_text(size=20, colour='white'),
@@ -551,6 +553,7 @@ get_synced_plot <- function(fluc_df, start_idx, stop_idx, ts,
 compute_veils <- function(ts, window_size=300, lag=1, verbose=T, design='sliding'){
   n <- length(ts)
   veil_starts <- seq(1, n - window_size + 1, by = lag)
+  veil_stops <- seq(window_size, n, by=lag)
   
   # Veils computation
   fluctuations_list <- vector("list", length(veil_starts))
@@ -577,8 +580,10 @@ compute_veils <- function(ts, window_size=300, lag=1, verbose=T, design='sliding
     
     if (design == 'sliding'){
       v_start <- veil_starts[iveil]
+      v_stop  <- v_start + window_size - 1
     } else { # 'growing'
       v_start <- 1
+      v_stop <- veil_stops[iveil]
     }
     
     v_stop  <- v_start + window_size - 1
@@ -627,9 +632,13 @@ generate_veils_video <- function(fluctuations_list, ts, window_size, lag, save_p
                                  framerate=24, size=0.2, alpha=0.2, color="white", bg_color="#04304B", veil_scaling, design='sliding'){
   n <- length(ts)
   if (design == 'sliding'){
-    veil_starts <- seq(1, n - window_size + 1, by = lag)
+    veil_starts <- seq(1, n - window_size + 1, by=lag)
+    n_veils <- length(veil_starts)
   } else { # 'growing'
-    veil_starts <- rep(1, length(seq(1, n - window_size + 1, by = lag)))
+    #veil_starts <- rep(1, length(seq(1, n - window_size + 1, by = lag)))
+    v_start <- 1
+    veil_stops <- seq(window_size, n, by=lag)
+    n_veils <- length(veil_stops)
   }
   
   video_output <- paste0("./results/videos/", video_name)
@@ -654,15 +663,24 @@ generate_veils_video <- function(fluctuations_list, ts, window_size, lag, save_p
   cat("MP4 video generation...\n")
   av_capture_graphics(
     expr = {
-      for (iveil in 1:length(veil_starts)) {
+      for (iveil in seq(1, n_veils)) {
+        cat(paste0('v_start=', v_start, ', '))
         if (verbose){
           cat(iveil, ' ')
         }
-        v_start <- veil_starts[iveil]
-        v_stop  <- v_start + window_size - 1
+        if (design == 'sliding'){
+          v_start <- veil_starts[iveil]
+          v_stop  <- v_start + window_size - 1
+        } else {
+          v_start <- 1
+          v_stop  <- veil_stops[iveil]
+        }
+        # k <- 1
+        # size <- size * log(k * iveil)
+        cat(paste0('v_start=', v_start, ', v_stop=', v_stop, ', '))
         
         # On dessine directement le grobTree complet sans effacement blanc préalable
-        grid.draw(get_synced_plot(fluctuations_list[[iveil]], v_start, v_stop, ts, 
+        grid.draw(get_synced_plot(fluctuations_list[[iveil]], start_idx=v_start, stop_idx=v_stop, ts=ts, 
                                   size=size, alpha=alpha, color=color, bg_color=bg_color, veil_scaling=veil_scaling, min_fluc=min_fluc, max_fluc=max_fluc))
         if (save_pdf){
           ggsave(file=paste0("./results/videos/veil", iveil, ".png"))
